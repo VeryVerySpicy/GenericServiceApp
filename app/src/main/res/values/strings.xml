@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">My Application</string>
+    <string-array name="task_types">
+        <item>Med Reminders</item>
+        <item>Vitals Check</item>
+        <item>House Keeping</item>
+        <item>Personal Care</item>
+    </string-array>
 </resources>
