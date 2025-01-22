@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
@@ -63,23 +64,24 @@ public class PersonAdapter extends BaseAdapter {
             holder.personImageView = convertView.findViewById(R.id.personImageView);
             holder.personTextView = convertView.findViewById(R.id.personTextView);
             holder.statusButton = convertView.findViewById(R.id.listStatusBtn);
+            holder.taskButton = convertView.findViewById(R.id.listTaskBtn); // Use the correct ID
             holder.checkboxLayout = convertView.findViewById(R.id.listCheckboxLayout);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
+
         Person person = personList.get(position);
 
         // Load the image from the local path
-        String photoPath = person.getPhotoPath(); // Assuming this method returns the local file path
-        Bitmap bitmap = BitmapFactory.decodeFile(photoPath); // Load the image from the file
+        String photoPath = person.getPhotoPath();
+        Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
 
         if (bitmap != null) {
-            holder.personImageView.setImageBitmap(bitmap); // Set the bitmap to the ImageView
+            holder.personImageView.setImageBitmap(bitmap);
         } else {
-            // Optionally set a placeholder image if the bitmap is null
-            holder.personImageView.setImageResource(R.drawable.cat); // Replace with your placeholder image
+            holder.personImageView.setImageResource(R.drawable.cat); // Placeholder image
         }
 
         holder.personTextView.setText(person.getFullInfo());
@@ -87,14 +89,27 @@ public class PersonAdapter extends BaseAdapter {
         // Set the status button click listener
         holder.statusButton.setOnClickListener(view -> toggleCheckboxes(holder, position));
 
+        // Set the Task button click listener
+        holder.taskButton.setOnClickListener(v -> {
+            // Create an Intent to start TaskManagementActivity
+            Intent intent = new Intent(context, TaskManagementActivity.class);
+
+            // Pass client details via Intent extras
+            intent.putExtra("clientName", person.getFullInfo()); // Or pass other relevant details
+            intent.putExtra("clientPhoto", person.getPhotoPath()); // If you want to pass the photo too
+            context.startActivity(intent);
+        });
+
+
         return convertView;
     }
 
-
+    // Update the ViewHolder to include the Task button
     static class ViewHolder {
         ImageView personImageView;
         TextView personTextView;
         Button statusButton;
+        Button taskButton;
         LinearLayout checkboxLayout;
     }
 
