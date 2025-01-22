@@ -9,7 +9,7 @@
         android:id="@+id/personImageView"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginEnd="8dp"/>
+        android:layout_marginEnd="8dp" />
 
     <TextView
         android:id="@+id/personTextView"
@@ -19,11 +19,27 @@
         android:layout_marginStart="16dp"
         android:layout_gravity="center_vertical" />
 
-    <Button
-        android:id="@+id/listStatusBtn"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Status" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/listStatusBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/colorSecondary"
+            android:text="Status" />
+
+        <Button
+            android:id="@+id/listTaskBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/colorSecondary"
+            android:text="Task"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/listCheckboxLayout"
