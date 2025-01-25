@@ -1,9 +1,11 @@
 package com.example.myapplication.Adapters;
 
+import com.example.myapplication.Activities.TaskManagementActivity;
 import com.example.myapplication.R;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -39,7 +41,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         } else {
             holder.repeatTextView.setText("One-time task");
         }
+
+        // Set up the delete button click listener
+        holder.deleteButton.setOnClickListener(v -> {
+            // Remove the task from the list
+            taskList.remove(position);
+            // Notify the adapter that the item was removed
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, taskList.size());
+
+            // Call a method in the activity to update the SharedPreferences
+            if (holder.itemView.getContext() instanceof TaskManagementActivity) {
+                ((TaskManagementActivity) holder.itemView.getContext()).deleteTask(task); // Pass the task to be deleted
+            }
+        });
     }
+
+
 
     @Override
     public int getItemCount() {
@@ -48,6 +66,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
         TextView taskTypeTextView, dateTextView, timeTextView, repeatTextView;
+        ImageButton deleteButton;
 
         public TaskViewHolder(View itemView) {
             super(itemView);
@@ -55,6 +74,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             dateTextView = itemView.findViewById(R.id.dateTextView);
             timeTextView = itemView.findViewById(R.id.timeTextView);
             repeatTextView = itemView.findViewById(R.id.repeatTextView);
+            deleteButton = itemView.findViewById(R.id.deleteButton); // Initialize the delete button
         }
     }
+
 }

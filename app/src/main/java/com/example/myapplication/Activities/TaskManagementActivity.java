@@ -113,7 +113,6 @@ public class TaskManagementActivity extends AppCompatActivity {
 
         });
 
-
         // Save Task Button
         saveTaskButton.setOnClickListener(view -> saveTask(clientName, clientAddress));
 
@@ -124,11 +123,6 @@ public class TaskManagementActivity extends AppCompatActivity {
         populateDaysOfWeek();
 
         loadSavedTasks(clientName);
-        /*
-        // Load saved task data if any
-        if (clientName != null) {
-            loadSavedTask(clientName); // Pass clientName to loadSavedTask
-        }*/
     }
 
     private void openDatePicker() {
@@ -259,34 +253,21 @@ public class TaskManagementActivity extends AppCompatActivity {
         taskAdapter.notifyDataSetChanged();
     }
 
-
-
-
-/*
-    private void loadSavedTask(String clientName) {
+    public void deleteTask(Task taskToDelete) {
         SharedPreferences sharedPreferences = getSharedPreferences("Tasks", MODE_PRIVATE);
-        String savedTaskType = sharedPreferences.getString(clientName + "_taskType", null);
-        String savedDate = sharedPreferences.getString(clientName + "_date", null);
-        String savedTime = sharedPreferences.getString(clientName + "_time", null);
-        boolean isRepeating = sharedPreferences.getBoolean(clientName + "_isRepeating", false);
-        Set<String> savedDays = sharedPreferences.getStringSet(clientName + "_selectedDays", new HashSet<>());
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        if (savedTaskType != null) {
-            taskTypeSpinner.setSelection(((ArrayAdapter<String>) taskTypeSpinner.getAdapter()).getPosition(savedTaskType));
-            selectedDateTextView.setText(savedDate);
-            selectedTimeTextView.setText(savedTime);
-            repeatTaskCheckbox.setChecked(isRepeating);
-            if (isRepeating) {
-                for (int i = 0; i < daysOfWeekLayout.getChildCount(); i++) {
-                    View view = daysOfWeekLayout.getChildAt(i);
-                    if (view instanceof CheckBox) {
-                        CheckBox dayCheckbox = (CheckBox) view;
-                        if (savedDays.contains(dayCheckbox.getText().toString())) {
-                            dayCheckbox.setChecked(true);
-                        }
-                    }
-                }
-            }
-        }
-    }*/
+        String clientName = getIntent().getStringExtra("clientName");
+
+        // Retrieve the saved task list for this client
+        Set<String> taskSet = sharedPreferences.getStringSet(clientName + "_taskList", new HashSet<>());
+
+        // Remove the task from the set
+        taskSet.remove(taskToDelete.toString());
+
+        // Save the updated set back to SharedPreferences
+        editor.putStringSet(clientName + "_taskList", taskSet);
+        editor.apply();
+    }
+
 }
