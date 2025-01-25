@@ -4,9 +4,12 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
+import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,57 +43,72 @@ public class WebAccessAdapter {
         return new ArrayList<>(); // Return an empty list if fetching or parsing fails
     }
 
+    /**
+     * This fetches a JSON file from the given URL using a low-level Socket API.
+     * This method sends an HTTP GET request to the provided URL and retrieves the response.
+     *
+     * @param urlString the URL to fetch the JSON data from
+     * @return the JSON response as a String, or an empty string if an error occurs
+     */
     private String fetchJsonFromUrl(String urlString) {
         StringBuilder response = new StringBuilder();
-        HttpURLConnection conn = null;
+        Socket socket = null;
         BufferedReader reader = null;
+        OutputStream outStream;
 
         try {
+            // url configuration
             URL url = new URL(urlString);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.connect();
+            String host = url.getHost();
+            int port = url.getPort() == -1 ? 81 : url.getPort();
+            String path = url.getPath().isEmpty() ? "/" : url.getPath();
 
-            int status = conn.getResponseCode();
-            if (status == HttpURLConnection.HTTP_OK) {
-                InputStream inputStream = conn.getInputStream();
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-                String line;
-                while ((line = reader.readLine()) != null) {
+            // Open a socket connection
+            socket = new Socket(host, port);
+
+            // Creates output stream to send the request
+            outStream = socket.getOutputStream();
+            outStream.write(("GET " + path + " HTTP/1.1\r\n").getBytes());
+            outStream.write(("HOST: " + host + "\r\n").getBytes());
+            outStream.write(("Connection: close\r\n").getBytes());
+            outStream.write(("\r\n").getBytes());
+            outStream.flush();
+
+            // Read the response
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String line;
+            boolean isBody = false;
+
+            while ((line = reader.readLine()) != null) {
+                if (line.isEmpty()) {
+                    isBody = true;
+                } else if (isBody) {
                     response.append(line);
                 }
-                Log.d("Web Access:", "Response: " + response.toString()); // Log the response
-            } else {
-                Log.e("Web Access:", "Error fetching data, response code: " + status);
-                InputStream errorStream = conn.getErrorStream();
-                if (errorStream != null) {
-                    reader = new BufferedReader(new InputStreamReader(errorStream));
-                    StringBuilder errorResponse = new StringBuilder();
-                    String errorLine;
-                    while ((errorLine = reader.readLine()) != null) {
-                        errorResponse.append(errorLine);
-                    }
-                    Log.e("Web Access:", "Error response: " + errorResponse.toString());
-                }
             }
+
+            Log.d("Socket Access:", "Response: " + response);
+
         } catch (Exception e) {
-            Log.e("Web Access:", "Exception: " + e.getMessage(), e);
+            Log.e("Socket Access:", "Exception: " + e.getMessage(), e);
         } finally {
             if (reader != null) {
                 try {
                     reader.close();
                 } catch (Exception e) {
-                    Log.e("Web Access:", "Error closing reader", e);
+                    Log.e("Socket Access:", "Error closing reader", e);
                 }
             }
-            if (conn != null) {
-                conn.disconnect();
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    Log.e("Socket Access: ", "Error closing socket", e);
+                }
             }
         }
         return response.toString();
     }
-
-
 
     public List<Person> parseJson(String jsonString) throws JSONException {
         List<Person> personList = new ArrayList<>();
