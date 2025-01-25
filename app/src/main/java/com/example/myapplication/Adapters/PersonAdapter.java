@@ -152,7 +152,7 @@ public class PersonAdapter extends BaseAdapter {
             personTextView.setText(person.getFullInfo());
 
             // Send updated JSON to the server
-            sendUpdatedJson();
+            webAccessAdapter.sendUpdatedPersonListToServer(personList);
         });
 
         return checkBox;
@@ -167,31 +167,5 @@ public class PersonAdapter extends BaseAdapter {
         }
 
         return checkedStates;
-    }
-
-    // Method to send the updated JSON to the server
-    private void sendUpdatedJson() {
-
-        // Build the JSON string from the personList
-        JSONArray jsonArray = new JSONArray();
-        for (Person p : personList) {
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("id", p.getId());
-                jsonObject.put("firstName", p.getFirstName());
-                jsonObject.put("lastName", p.getLastName());
-                jsonObject.put("photo", p.getPhotoPath());
-                jsonObject.put("address", p.getAddress());
-                jsonObject.put("statuses", new JSONArray(p.getStatuses())); // Convert Set to JSONArray
-                jsonArray.put(jsonObject);
-            } catch (JSONException e) {
-                Log.e("PersonAdapter", "Error creating JSON object: " + e.getMessage());
-            }
-        }
-
-        // Convert JSONArray to String
-        String jsonString = jsonArray.toString();
-        // Send JSON to the server
-        this.webAccessAdapter.sendJsonToServer(jsonString);
     }
 }
