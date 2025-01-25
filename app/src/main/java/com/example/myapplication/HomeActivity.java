@@ -45,7 +45,7 @@ public class HomeActivity extends AppCompatActivity {
         originalPersonList = new ArrayList<>();
         filteredPersonList = new ArrayList<>();
 
-        webAccess = new WebAccess("http://10.0.2.2:5187/api/persons/");
+        webAccess = new WebAccess("http://10.0.2.2:8081/MyWebApp/");
 
         // Instantiate WebAccess and fetch JSON data
         new Thread(new Runnable() {
