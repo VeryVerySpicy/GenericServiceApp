@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
@@ -12,8 +12,10 @@ import android.widget.Button;
 import android.widget.RadioGroup;
 import androidx.appcompat.widget.SearchView;
 
-import com.example.myapplication.helper.Person;
-import com.example.myapplication.net.WebAccess;
+import com.example.myapplication.Models.Person;
+import com.example.myapplication.R;
+import com.example.myapplication.Adapters.PersonAdapter;
+import com.example.myapplication.Adapters.WebAccessAdapter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,7 +28,7 @@ public class HomeActivity extends AppCompatActivity {
     private EditText searchEditText;  // Ensure this corresponds to the XML ID search_view
     private Button searchButton;
     private ListView personListView;
-    private WebAccess webAccess;
+    private WebAccessAdapter webAccessAdapter;
     private RadioGroup sortRadioGroup;
 
     @Override
@@ -45,19 +47,19 @@ public class HomeActivity extends AppCompatActivity {
         originalPersonList = new ArrayList<>();
         filteredPersonList = new ArrayList<>();
 
-        webAccess = new WebAccess("http://10.0.2.2:8081/MyWebApp/");
+        webAccessAdapter = new WebAccessAdapter(getString(R.string.base_url));
 
         // Instantiate WebAccess and fetch JSON data
         new Thread(new Runnable() {
             @Override
             public void run() {
-                originalPersonList = webAccess.fetchAndParseJson();
+                originalPersonList = webAccessAdapter.fetchAndParseJson();
                 filteredPersonList.addAll(originalPersonList);
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        personAdapter = new PersonAdapter(HomeActivity.this, originalPersonList, webAccess);
+                        personAdapter = new PersonAdapter(HomeActivity.this, originalPersonList, webAccessAdapter);
                         personListView.setAdapter(personAdapter);
                     }
                 });
@@ -93,18 +95,18 @@ public class HomeActivity extends AppCompatActivity {
         String query = searchEditText.getText().toString().toLowerCase();
         filteredPersonList.clear();
 
-        if (query != null && !query.isEmpty()) {
+        if (!query.isEmpty()) {
             for (Person person : originalPersonList) {
                 if (person.getFullInfo().toLowerCase().contains(query)) {
                     filteredPersonList.add(person);
                 }
             }
-            personAdapter = new PersonAdapter(this, filteredPersonList, webAccess);
         } else {
             filteredPersonList.addAll(originalPersonList);
-            personAdapter = new PersonAdapter(this, originalPersonList, webAccess);
         }
-        personListView.setAdapter(personAdapter);
+
+        // Instead of re-creating the adapter, just update the list
+        personAdapter.notifyDataSetChanged();
     }
 
     private void sortPersonList(int checkedId) {
@@ -120,7 +122,7 @@ public class HomeActivity extends AppCompatActivity {
 
         if (comparator != null) {
             Collections.sort(filteredPersonList, comparator);
-            personAdapter = new PersonAdapter(this, filteredPersonList, webAccess);
+            personAdapter = new PersonAdapter(this, filteredPersonList, webAccessAdapter);
             personListView.setAdapter(personAdapter);
         }
     }

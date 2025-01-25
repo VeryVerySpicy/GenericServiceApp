@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,8 +19,9 @@ import org.json.JSONObject;
 import org.json.JSONException;
 import android.util.Log;
 
-import com.example.myapplication.helper.Person;
-import com.example.myapplication.net.WebAccess;
+import com.example.myapplication.Models.Person;
+import com.example.myapplication.R;
+import com.example.myapplication.Activities.TaskManagementActivity;
 
 import java.util.List;
 import java.util.Set;
@@ -28,13 +29,13 @@ import java.util.Set;
 public class PersonAdapter extends BaseAdapter {
     private List<Person> personList;
     private Context context;
-    private WebAccess webAccess;
+    private WebAccessAdapter webAccessAdapter;
     private final String[] checkboxOptions = {"active", "inactive", "pending"};
 
-    public PersonAdapter(Context context, List<Person> personList, WebAccess webAccess) {
+    public PersonAdapter(Context context, List<Person> personList, WebAccessAdapter webAccessAdapter) {
         this.context = context;
         this.personList = personList;
-        this.webAccess = webAccess;
+        this.webAccessAdapter = webAccessAdapter;
     }
 
     @Override
@@ -191,6 +192,6 @@ public class PersonAdapter extends BaseAdapter {
         // Convert JSONArray to String
         String jsonString = jsonArray.toString();
         // Send JSON to the server
-        this.webAccess.sendJsonToServer(jsonString);
+        this.webAccessAdapter.sendJsonToServer(jsonString);
     }
 }

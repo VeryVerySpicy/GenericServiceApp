@@ -1,4 +1,4 @@
-package com.example.myapplication;
+package com.example.myapplication.Activities;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -15,9 +15,10 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
-import com.example.myapplication.helper.Person;
-import com.example.myapplication.helper.OnSwipeTouchListener;
-import com.example.myapplication.net.WebAccess;
+import com.example.myapplication.Models.Person;
+import com.example.myapplication.R;
+import com.example.myapplication.Adapters.OnSwipeTouchListenerAdapter;
+import com.example.myapplication.Adapters.WebAccessAdapter;
 import org.json.JSONException;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,6 +30,7 @@ import java.util.Set;
 
 public class DetailActivity extends Activity {
 
+    private WebAccessAdapter webAccessAdapter;
     Intent intent;
     ArrayList<Person> data;
     int position;
@@ -37,12 +39,14 @@ public class DetailActivity extends Activity {
     private LinearLayout checkboxLayout;
     private Button statusButton;
     private final String[] checkboxOptions = {"active", "inactive", "pending"};
+    private List<Person> personList;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        webAccessAdapter = new WebAccessAdapter(getString(R.string.base_url));
         picture = findViewById(R.id.detailImage);
         personInfoView = findViewById(R.id.detailPersonInfo);
         checkboxLayout = findViewById(R.id.detailCheckboxLayout);
@@ -54,9 +58,9 @@ public class DetailActivity extends Activity {
 
         changePerson(position);
 
-        picture.setOnTouchListener(new OnSwipeTouchListener(DetailActivity.this) {
+        picture.setOnTouchListener(new OnSwipeTouchListenerAdapter(DetailActivity.this) {
             public void onSwipeRight() {
-                if (position < data.size())
+                if (position < data.size() - 1)
                     position++;
                 else
                     position = 0;
@@ -66,24 +70,7 @@ public class DetailActivity extends Activity {
                 if (position > 0)
                     position--;
                 else
-                    position = data.size();
-                changePerson(position);
-            }
-        });
-
-        personInfoView.setOnTouchListener(new OnSwipeTouchListener(DetailActivity.this) {
-            public void onSwipeRight() {
-                if (position < data.size())
-                    position++;
-                else
-                    position = 0;
-                changePerson(position);
-            }
-            public void onSwipeLeft() {
-                if (position > 0)
-                    position--;
-                else
-                    position = data.size();
+                    position = data.size() - 1;
                 changePerson(position);
             }
         });
@@ -148,45 +135,10 @@ public class DetailActivity extends Activity {
             personInfoView.setText(person.getFullInfo()); // Update the displayed person info if necessary
 
             // Send updated list to the server after checkbox status is changed
-            sendUpdatedPersonListToServer();
+            webAccessAdapter.sendUpdatedPersonListToServer(data);
         });
 
         return checkBox;
-    }
-
-    // Method to send the updated list of people to the server
-    private void sendUpdatedPersonListToServer() {
-        // Convert the entire list to JSON and send it to the server
-        String jsonData = convertPersonListToJson(data); // Pass the current data list
-        WebAccess webAccess = new WebAccess("http://10.0.2.2:8081/MyWebApp/"); // Create WebAccess instance
-        webAccess.sendJsonToServer(jsonData); // Send the data to the server
-    }
-
-    // Convert the Person list to JSON string
-    private String convertPersonListToJson(List<Person> personList) {
-        JSONArray jsonArray = new JSONArray();
-        try {
-            for (Person person : personList) {
-                JSONObject personObject = new JSONObject();
-                personObject.put("id", person.getId());
-                personObject.put("firstName", person.getFirstName());
-                personObject.put("lastName", person.getLastName());
-                personObject.put("photo", person.getPhotoPath());
-                personObject.put("address", person.getAddress());
-
-                // Convert statuses to JSONArray
-                JSONArray statusesArray = new JSONArray();
-                for (String status : person.getStatuses()) {
-                    statusesArray.put(status);
-                }
-                personObject.put("statuses", statusesArray);
-
-                jsonArray.put(personObject);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return jsonArray.toString(); // Return the JSON string
     }
 
     // Determine which checkboxes should be checked based on the status

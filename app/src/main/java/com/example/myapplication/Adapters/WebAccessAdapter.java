@@ -1,4 +1,4 @@
-package com.example.myapplication.net;
+package com.example.myapplication.Adapters;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -17,14 +17,14 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import com.example.myapplication.helper.Person;
+import com.example.myapplication.Models.Person;
 import java.io.OutputStream;
 
 
-public class WebAccess {
+public class WebAccessAdapter {
     String url;
 
-    public WebAccess(String url) {
+    public WebAccessAdapter(String url) {
         this.url = url;
     }
 
@@ -171,6 +171,44 @@ public class WebAccess {
         return localFilePath; // Return the local file path
     }
 
+    // This method will send the updated person list to the server
+    public void sendUpdatedPersonListToServer(List<Person> personList) {
+        // Convert the list of Person objects into a JSON string
+        String jsonString = convertPersonListToJson(personList);
+
+        // Now send the JSON to the server
+        sendJsonToServer(jsonString);
+    }
+
+    // Convert the Person list to JSON string
+    private String convertPersonListToJson(List<Person> personList) {
+        JSONArray jsonArray = new JSONArray();
+
+        // Iterate over the personList and create JSON objects
+        for (Person person : personList) {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("id", person.getId());
+                jsonObject.put("firstName", person.getFirstName());
+                jsonObject.put("lastName", person.getLastName());
+                jsonObject.put("photo", person.getPhotoPath());
+                jsonObject.put("address", person.getAddress());
+
+                // Convert the Set of statuses to a JSONArray
+                JSONArray statusesArray = new JSONArray(person.getStatuses());
+                jsonObject.put("statuses", statusesArray);
+
+                // Add the JSON object to the JSON array
+                jsonArray.put(jsonObject);
+            } catch (JSONException e) {
+                Log.e("WebAccessAdapter", "Error creating JSON object for person: " + person.getId(), e);
+            }
+        }
+
+        // Convert the entire JSON array into a string
+        return jsonArray.toString();
+    }
+
     public void sendJsonToServer(String jsonData) {
         new Thread(new Runnable() {
             @Override
@@ -178,7 +216,7 @@ public class WebAccess {
                 HttpURLConnection conn = null;
                 OutputStream os = null;
                 try {
-                    URL url = new URL(WebAccess.this.url);
+                    URL url = new URL(WebAccessAdapter.this.url);
                     conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json");

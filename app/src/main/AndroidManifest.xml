@@ -29,16 +29,16 @@
 
         <!-- Activities -->
         <activity
-            android:name=".HomeActivity"
+            android:name=".Activities.HomeActivity"
             android:exported="false" />
         <activity
-            android:name=".SearchActivity"
+            android:name=".Activities.SearchActivity"
             android:exported="false" />
         <activity
-            android:name=".DetailActivity"
+            android:name=".Activities.DetailActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".Activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -48,7 +48,7 @@
 
         <!-- Add this for your new activity -->
         <activity
-            android:name=".TaskManagementActivity"
+            android:name=".Activities.TaskManagementActivity"
             android:exported="true" />
 
         <!-- File Provider -->

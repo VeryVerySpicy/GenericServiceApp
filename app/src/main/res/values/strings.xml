@@ -6,4 +6,5 @@
         <item>House Keeping</item>
         <item>Personal Care</item>
     </string-array>
+    <string name="base_url">http://10.0.2.2:8081/MyWebApp/</string>
 </resources>

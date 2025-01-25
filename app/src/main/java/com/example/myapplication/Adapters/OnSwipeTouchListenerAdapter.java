@@ -1,4 +1,4 @@
-package com.example.myapplication.helper;
+package com.example.myapplication.Adapters;
 
 import android.content.Context;
 import android.view.GestureDetector;
@@ -7,11 +7,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 
-public class OnSwipeTouchListener implements OnTouchListener {
+public class OnSwipeTouchListenerAdapter implements OnTouchListener {
 
     private final GestureDetector gestureDetector;
 
-    public OnSwipeTouchListener (Context ctx){
+    public OnSwipeTouchListenerAdapter(Context ctx){
         gestureDetector = new GestureDetector(ctx, new GestureListener());
     }
 
