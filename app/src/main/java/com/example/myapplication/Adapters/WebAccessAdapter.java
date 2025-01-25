@@ -2,12 +2,12 @@ package com.example.myapplication.Adapters;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
@@ -15,12 +15,16 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import android.os.Environment;
 import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import com.example.myapplication.Models.Person;
+
 import java.io.OutputStream;
 
 
@@ -148,14 +152,54 @@ public class WebAccessAdapter {
         return personList;
     }
 
+    /**
+     *  This downloads an image from the given URL using the Socket API and saves it to the device's storage.
+     *
+     * @param imageUrl The URL of the image to download.
+     * @return The local file path where the image is saved, or null if an error occurs.
+     */
     public String downloadImage(String imageUrl) {
-        InputStream input = null;
-        FileOutputStream output = null;
-        String localFilePath = null; // Initialize local file path
+        Socket socket = null;
+        FileOutputStream imageOutput = null;
+        String localFilePath = null;
+        BufferedInputStream bufferedInputStream;
+        InputStream imageInput = null;
+        OutputStream outStream;
+
         try {
             // Create the URL object
             URL url = new URL(imageUrl);
-            input = new BufferedInputStream(url.openStream());
+            String host = url.getHost();
+            int port = url.getPort() == -1 ? 81 : url.getPort();
+            String path = url.getPath().isEmpty() ? "/" : url.getPath();
+
+            // Open a socket connection
+            socket = new Socket(host, port);
+
+            // Creates output stream to send the request
+            outStream = socket.getOutputStream();
+            outStream.write(("GET " + path + " HTTP/1.1\r\n").getBytes());
+            outStream.write(("HOST: " + host + "\r\n").getBytes());
+            outStream.write(("Connection: close\r\n").getBytes());
+            outStream.write(("\r\n").getBytes());
+            outStream.flush();
+
+            // Read the response
+            imageInput = socket.getInputStream();
+            bufferedInputStream = new BufferedInputStream(imageInput);
+
+            ByteArrayOutputStream headerBuffer = new ByteArrayOutputStream();
+            int newLineCount = 0;
+            while (newLineCount < 4) {
+                int b = bufferedInputStream.read();
+                headerBuffer.write(b);
+                if (b == '\r' || b == '\n') {
+                    newLineCount++;
+                } else {
+                    newLineCount = 0; // Reset if not continuous newlines
+                }
+            }
+            Log.d("Socket Access:", "Headers: " + headerBuffer.toString("UTF-8"));
 
             // Create a directory to save images
             File directory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyAppImages");
@@ -164,26 +208,27 @@ public class WebAccessAdapter {
             }
 
             // Create the output file
-            File imageFile = new File(directory, imageUrl.substring(imageUrl.lastIndexOf('/') + 1));
-            output = new FileOutputStream(imageFile);
+            File imageFile = new File(directory, path.substring(path.lastIndexOf('/') + 1));
+            imageOutput = new FileOutputStream(imageFile);
             localFilePath = imageFile.getAbsolutePath(); // Update local file path
 
-            // Download the image and save it
-            byte[] data = new byte[1024];
-            int count;
-            while ((count = input.read(data)) != -1) {
-                output.write(data, 0, count);
+            // Download the image content as binary data
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = bufferedInputStream.read(buffer)) != -1) {
+                imageOutput.write(buffer, 0, bytesRead);
             }
 
-            Log.d("Web Access:", "Image downloaded to: " + localFilePath);
+            Log.d("Socket Access:", "Image downloaded to: " + localFilePath);
         } catch (Exception e) {
-            Log.e("Web Access:", "Error downloading image: " + e.getMessage());
+            Log.e("Socket Access:", "Error downloading image: " + e.getMessage());
         } finally {
             try {
-                if (output != null) output.close();
-                if (input != null) input.close();
+                if (imageOutput != null) imageOutput.close();
+                if (imageInput != null) imageInput.close();
+                if (socket != null) socket.close();
             } catch (Exception e) {
-                Log.e("Web Access:", "Error closing streams: " + e.getMessage());
+                Log.e("Socket Access:", "Error closing streams: " + e.getMessage());
             }
         }
         return localFilePath; // Return the local file path
