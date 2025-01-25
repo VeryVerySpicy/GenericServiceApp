@@ -67,7 +67,7 @@ public class TaskManagementActivity extends AppCompatActivity {
         // Retrieve client data from Intent
         String clientName = getIntent().getStringExtra("clientName");
         String clientAddress = getIntent().getStringExtra("clientAddress");
-        String clientImageUri = getIntent().getStringExtra("clientImageUri"); // Retrieve the image URI
+        String clientImageUri = getIntent().getStringExtra("clientPhoto"); // Retrieve the image URI
 
         // Display client details
         if (clientName != null) clientNameTextView.setText(clientName);
