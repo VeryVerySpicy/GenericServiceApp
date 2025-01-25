@@ -17,14 +17,25 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.example.myapplication.Adapters.TaskAdapter;
+import com.example.myapplication.Models.Task;
 import com.example.myapplication.R;
 
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class TaskManagementActivity extends AppCompatActivity {
+
+    private RecyclerView taskListRecyclerView;
+    private TaskAdapter taskAdapter;
+    private List<Task> taskList;
 
     // Fields remain unchanged
     private TextView clientNameTextView, clientAddressTextView, selectedDateTextView, selectedTimeTextView;
@@ -57,6 +68,11 @@ public class TaskManagementActivity extends AppCompatActivity {
         daysOfWeekLayout = findViewById(R.id.daysOfWeekLayout);
         selectedDateTextView = findViewById(R.id.selectedDateTextView);
         selectedTimeTextView = findViewById(R.id.selectedTimeTextView);
+        taskListRecyclerView = findViewById(R.id.taskListRecyclerView);
+        taskList = new ArrayList<>();
+        taskAdapter = new TaskAdapter(taskList);
+        taskListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        taskListRecyclerView.setAdapter(taskAdapter);
 
         selectedDays = new HashSet<>();
         context = this;
@@ -94,7 +110,9 @@ public class TaskManagementActivity extends AppCompatActivity {
         // Repeat Task Checkbox
         repeatTaskCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             daysOfWeekLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+
         });
+
 
         // Save Task Button
         saveTaskButton.setOnClickListener(view -> saveTask(clientName, clientAddress));
@@ -105,10 +123,12 @@ public class TaskManagementActivity extends AppCompatActivity {
         // Populate Days of Week Checkboxes
         populateDaysOfWeek();
 
+        loadSavedTasks(clientName);
+        /*
         // Load saved task data if any
         if (clientName != null) {
             loadSavedTask(clientName); // Pass clientName to loadSavedTask
-        }
+        }*/
     }
 
     private void openDatePicker() {
@@ -169,32 +189,80 @@ public class TaskManagementActivity extends AppCompatActivity {
         }
 
         boolean isRepeating = repeatTaskCheckbox.isChecked();
-        String message = "Task for " + clientName + "\n" +
-                "Address: " + clientAddress + "\n" +
-                "Task Type: " + taskType +
-                "\nDate: " + selectedDate +
-                "\nTime: " + selectedTime;
 
-        if (isRepeating) {
-            message += "\nRepeats on: " + String.join(", ", selectedDays);
-        }
+        // Create a new Task object
+        Task newTask = new Task(taskType, selectedDate, selectedTime, isRepeating, selectedDays);
 
-        Toast.makeText(context, "Task Saved:\n" + message, Toast.LENGTH_LONG).show();
+        // Add the Task object to the task list
+        taskList.add(newTask);
 
-        // Save task to SharedPreferences using the client's name as the key
+        // Notify the adapter to update the RecyclerView
+        taskAdapter.notifyDataSetChanged();
+
+        // Optionally scroll to the newly added task
+        taskListRecyclerView.scrollToPosition(taskList.size() - 1);
+
+        // Save the task list for the current client to SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("Tasks", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(clientName + "_taskType", taskType);
-        editor.putString(clientName + "_date", selectedDate);
-        editor.putString(clientName + "_time", selectedTime);
-        editor.putBoolean(clientName + "_isRepeating", isRepeating);
-        editor.putStringSet(clientName + "_selectedDays", selectedDays);
+
+        // Convert the taskList to a Set of strings
+        Set<String> taskSet = new HashSet<>();
+        for (Task task : taskList) {
+            taskSet.add(task.toString()); // Convert task to string representation
+        }
+
+        // Use the clientName as the key to save tasks specific to this client
+        editor.putStringSet(clientName + "_taskList", taskSet); // Use clientName to uniquely identify the task list
         editor.apply();
 
         // Go back to the previous screen
         finish();
     }
 
+
+    private void loadSavedTasks(String clientName) {
+        SharedPreferences sharedPreferences = getSharedPreferences("Tasks", MODE_PRIVATE);
+
+        // Use the clientName to retrieve the task list for this specific client
+        Set<String> taskSet = sharedPreferences.getStringSet(clientName + "_taskList", new HashSet<>()); // Use client-specific key
+
+        taskList.clear(); // Clear any existing tasks
+
+        // Loop through each task string and convert it back to a Task object
+        for (String taskString : taskSet) {
+            // Split the task string into parts (you may need to adjust this depending on the format)
+            String[] parts = taskString.split(" \\| "); // Split by " | " (ensure spacing is correct)
+
+            if (parts.length >= 4) {
+                String taskType = parts[0];
+                String date = parts[1];
+                String time = parts[2];
+                boolean isRepeating = parts[3].startsWith("Repeats on:");
+                Set<String> selectedDays = new HashSet<>();
+
+
+                if (isRepeating && parts.length > 3) {
+                    // Add selected days from the string (e.g., "Monday, Tuesday")
+                    String daysString = parts[3].replace("Repeats on: ", "");
+                    String[] days = daysString.split(", ");
+                    selectedDays.addAll(Arrays.asList(days));
+                }
+
+                // Create a Task object and add it to the task list
+                Task task = new Task(taskType, date, time, isRepeating, selectedDays);
+                taskList.add(task);
+            }
+        }
+
+        // Notify the adapter to update the UI
+        taskAdapter.notifyDataSetChanged();
+    }
+
+
+
+
+/*
     private void loadSavedTask(String clientName) {
         SharedPreferences sharedPreferences = getSharedPreferences("Tasks", MODE_PRIVATE);
         String savedTaskType = sharedPreferences.getString(clientName + "_taskType", null);
@@ -220,5 +288,5 @@ public class TaskManagementActivity extends AppCompatActivity {
                 }
             }
         }
-    }
+    }*/
 }
