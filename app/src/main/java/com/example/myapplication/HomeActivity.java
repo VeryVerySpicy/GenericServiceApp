@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Button;
 import android.widget.RadioGroup;
+import androidx.appcompat.widget.SearchView;
 
 import com.example.myapplication.helper.Person;
 import com.example.myapplication.net.WebAccess;
@@ -22,7 +23,7 @@ public class HomeActivity extends AppCompatActivity {
     private List<Person> originalPersonList;
     private List<Person> filteredPersonList;
     private PersonAdapter personAdapter;
-    private EditText searchEditText;
+    private EditText searchEditText;  // Ensure this corresponds to the XML ID search_view
     private Button searchButton;
     private ListView personListView;
     private WebAccess webAccess;
@@ -33,15 +34,18 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        searchEditText = findViewById(R.id.searchEditText);
-        searchButton = findViewById(R.id.searchButton);
+        // Correct the way you're accessing the SearchView and its EditText
+        SearchView searchView = findViewById(R.id.search_view);  // Reference the SearchView
+        EditText searchEditText = searchView.findViewById(androidx.appcompat.R.id.search_src_text);  // Get the internal EditText
+
+        searchButton = findViewById(R.id.searchButton);  // Reference the search button
         personListView = findViewById(R.id.personListView);
         sortRadioGroup = findViewById(R.id.sortRadioGroup);
 
         originalPersonList = new ArrayList<>();
         filteredPersonList = new ArrayList<>();
 
-        webAccess = new WebAccess("http://10.0.2.2:8081/MyWebApp/");
+        webAccess = new WebAccess("http://10.0.2.2:5187/api/persons/");
 
         // Instantiate WebAccess and fetch JSON data
         new Thread(new Runnable() {
@@ -53,7 +57,6 @@ public class HomeActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        // Update UI with the result
                         personAdapter = new PersonAdapter(HomeActivity.this, originalPersonList, webAccess);
                         personListView.setAdapter(personAdapter);
                     }
@@ -65,7 +68,7 @@ public class HomeActivity extends AppCompatActivity {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filterList();
+                filterList(searchEditText);  // Pass the EditText as a parameter to the filterList method
             }
         });
 
@@ -74,15 +77,11 @@ public class HomeActivity extends AppCompatActivity {
         personListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // Starting new intent
                 Intent in = new Intent(getApplicationContext(), DetailActivity.class);
                 in.putExtra("KEY_POSITION", position);
-                if (filteredPersonList.size() > 0)
-                {
+                if (filteredPersonList.size() > 0) {
                     in.putParcelableArrayListExtra("KEY_PERSON_LIST", (ArrayList<? extends Parcelable>) filteredPersonList);
-                }
-                else
-                {
+                } else {
                     in.putParcelableArrayListExtra("KEY_PERSON_LIST", (ArrayList<? extends Parcelable>) originalPersonList);
                 }
                 startActivity(in);
@@ -90,26 +89,23 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    private void filterList() {
+    private void filterList(EditText searchEditText) {
         String query = searchEditText.getText().toString().toLowerCase();
-        filteredPersonList.clear(); // Clear the filtered list
+        filteredPersonList.clear();
 
-        // Check if the query is null or empty
         if (query != null && !query.isEmpty()) {
             for (Person person : originalPersonList) {
                 if (person.getFullInfo().toLowerCase().contains(query)) {
                     filteredPersonList.add(person);
                 }
             }
-            personAdapter = new PersonAdapter(this, filteredPersonList, webAccess); // Pass webAccess here
+            personAdapter = new PersonAdapter(this, filteredPersonList, webAccess);
         } else {
-            // Reset to original list if the query is empty
             filteredPersonList.addAll(originalPersonList);
-            personAdapter = new PersonAdapter(this, originalPersonList, webAccess); // Pass webAccess here
+            personAdapter = new PersonAdapter(this, originalPersonList, webAccess);
         }
         personListView.setAdapter(personAdapter);
     }
-
 
     private void sortPersonList(int checkedId) {
         Comparator<Person> comparator = null;
