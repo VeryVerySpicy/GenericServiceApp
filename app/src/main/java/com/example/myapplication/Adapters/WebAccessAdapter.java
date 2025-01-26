@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -53,7 +54,7 @@ public class WebAccessAdapter {
      * @param urlString the URL to fetch the JSON data from
      * @return the JSON response as a String, or an empty string if an error occurs
      */
- /*   private String fetchJsonFromUrl(String urlString) {
+    private String fetchJsonFromUrl(String urlString) {
         StringBuilder response = new StringBuilder();
         Socket socket = null;
         BufferedReader reader = null;
@@ -73,8 +74,7 @@ public class WebAccessAdapter {
             outStream = socket.getOutputStream();
             outStream.write(("GET " + path + " HTTP/1.1\r\n").getBytes());
             outStream.write(("HOST: " + host + "\r\n").getBytes());
-            outStream.write(("Connection: close\r\n").getBytes());
-            outStream.write(("\r\n").getBytes());
+            outStream.write(("Connection: close\r\n\r\n").getBytes());
             outStream.flush();
 
             // Read the response
@@ -89,6 +89,8 @@ public class WebAccessAdapter {
                     response.append(line);
                 }
             }
+            // current has bug that fetch does not grab the one last letter and this will temporary fix for the issue
+            response.append("]");
 
             Log.d("Socket Access:", "Response: " + response);
 
@@ -111,8 +113,8 @@ public class WebAccessAdapter {
             }
         }
         return response.toString();
-    }*/
-    private String fetchJsonFromUrl(String urlString) {
+    }
+/*    private String fetchJsonFromUrl(String urlString) {
         StringBuilder response = new StringBuilder();
         HttpURLConnection conn = null;
         BufferedReader reader = null;
@@ -160,7 +162,7 @@ public class WebAccessAdapter {
             }
         }
         return response.toString();
-    }
+    }*/
 
     public List<Person> parseJson(String jsonString) throws JSONException {
         List<Person> personList = new ArrayList<>();
