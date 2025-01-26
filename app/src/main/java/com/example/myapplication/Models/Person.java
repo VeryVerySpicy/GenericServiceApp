@@ -18,6 +18,7 @@ public class Person implements Parcelable {
     private String photoPath;
     private String address;
     private Set<String> statuses;
+    private boolean isCheckboxLayoutVisible = false;
 
     public Person(int id, String firstName, String lastName, String photoPath, String address, Set<String> statuses) {
         this.id = id;
@@ -40,6 +41,14 @@ public class Person implements Parcelable {
 
     }
 
+    public boolean isCheckboxLayoutVisible() {
+        return isCheckboxLayoutVisible;
+    }
+
+    public void setCheckboxLayoutVisible(boolean visible) {
+        isCheckboxLayoutVisible = visible;
+    }
+
     public static final Creator<Person> CREATOR = new Creator<Person>() {
         @Override
         public Person createFromParcel(Parcel in) {
@@ -51,6 +60,7 @@ public class Person implements Parcelable {
             return new Person[size];
         }
     };
+
     public String getFirstName() {
         return firstName;
     }
@@ -58,6 +68,7 @@ public class Person implements Parcelable {
     public String getLastName() {
         return lastName;
     }
+
     public String getAddress() {
         return address;
     }

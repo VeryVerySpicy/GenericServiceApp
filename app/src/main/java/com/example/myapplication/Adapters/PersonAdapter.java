@@ -61,42 +61,48 @@ public class PersonAdapter extends BaseAdapter {
             holder.personImageView = convertView.findViewById(R.id.personImageView);
             holder.personTextView = convertView.findViewById(R.id.personTextView);
             holder.statusButton = convertView.findViewById(R.id.listStatusBtn);
-            holder.taskButton = convertView.findViewById(R.id.listTaskBtn); // Use the correct ID
+            holder.taskButton = convertView.findViewById(R.id.listTaskBtn);
             holder.checkboxLayout = convertView.findViewById(R.id.listCheckboxLayout);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-
         Person person = personList.get(position);
 
-        // Load the image from the local path
+        // Load image
         String photoPath = person.getPhotoPath();
         Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
-
         if (bitmap != null) {
             holder.personImageView.setImageBitmap(bitmap);
         } else {
-            holder.personImageView.setImageResource(R.drawable.cat); // Placeholder image
+            holder.personImageView.setImageResource(R.drawable.cat);
         }
 
         holder.personTextView.setText(person.getFullInfo());
 
+        // Set visibility of the checkbox layout
+        if (person.isCheckboxLayoutVisible()) {
+            holder.checkboxLayout.setVisibility(View.VISIBLE);
+            addCheckboxes(holder.checkboxLayout, person, holder.personTextView);
+        } else {
+            holder.checkboxLayout.setVisibility(View.GONE);
+        }
+
         // Set the status button click listener
-        holder.statusButton.setOnClickListener(view -> toggleCheckboxes(holder, position));
+        holder.statusButton.setOnClickListener(view -> {
+            boolean isVisible = person.isCheckboxLayoutVisible();
+            person.setCheckboxLayoutVisible(!isVisible);
+            notifyDataSetChanged(); // Refresh the ListView
+        });
 
         // Set the Task button click listener
         holder.taskButton.setOnClickListener(v -> {
-            // Create an Intent to start TaskManagementActivity
             Intent intent = new Intent(context, TaskManagementActivity.class);
-
-            // Pass client details via Intent extras
-            intent.putExtra("clientName", person.getFullInfo()); // Or pass other relevant details
-            intent.putExtra("clientPhoto", person.getPhotoPath()); // If you want to pass the photo too
+            intent.putExtra("clientName", person.getFullInfo());
+            intent.putExtra("clientPhoto", person.getPhotoPath());
             context.startActivity(intent);
         });
-
 
         return convertView;
     }
@@ -108,16 +114,6 @@ public class PersonAdapter extends BaseAdapter {
         Button statusButton;
         Button taskButton;
         LinearLayout checkboxLayout;
-    }
-
-    // Method to toggle the visibility of checkboxes
-    private void toggleCheckboxes(ViewHolder holder, int position) {
-        if (holder.checkboxLayout.getVisibility() == View.VISIBLE) {
-            holder.checkboxLayout.setVisibility(View.GONE);
-        } else {
-            holder.checkboxLayout.setVisibility(View.VISIBLE);
-            addCheckboxes(holder.checkboxLayout, personList.get(position), holder.personTextView);
-        }
     }
 
     // Create the checkboxes based on the status
