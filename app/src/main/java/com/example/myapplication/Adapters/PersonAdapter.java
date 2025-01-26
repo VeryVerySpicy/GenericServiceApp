@@ -14,10 +14,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONException;
-import android.util.Log;
 
 import com.example.myapplication.Models.Person;
 import com.example.myapplication.R;
