@@ -5,7 +5,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -54,7 +53,7 @@ public class WebAccessAdapter {
      * @param urlString the URL to fetch the JSON data from
      * @return the JSON response as a String, or an empty string if an error occurs
      */
-    private String fetchJsonFromUrl(String urlString) {
+ /*   private String fetchJsonFromUrl(String urlString) {
         StringBuilder response = new StringBuilder();
         Socket socket = null;
         BufferedReader reader = null;
@@ -109,6 +108,55 @@ public class WebAccessAdapter {
                 } catch (IOException e) {
                     Log.e("Socket Access: ", "Error closing socket", e);
                 }
+            }
+        }
+        return response.toString();
+    }*/
+    private String fetchJsonFromUrl(String urlString) {
+        StringBuilder response = new StringBuilder();
+        HttpURLConnection conn = null;
+        BufferedReader reader = null;
+
+        try {
+            URL url = new URL(urlString);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.connect();
+
+            int status = conn.getResponseCode();
+            if (status == HttpURLConnection.HTTP_OK) {
+                InputStream inputStream = conn.getInputStream();
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                Log.d("Web Access:", "Response: " + response.toString()); // Log the response
+            } else {
+                Log.e("Web Access:", "Error fetching data, response code: " + status);
+                InputStream errorStream = conn.getErrorStream();
+                if (errorStream != null) {
+                    reader = new BufferedReader(new InputStreamReader(errorStream));
+                    StringBuilder errorResponse = new StringBuilder();
+                    String errorLine;
+                    while ((errorLine = reader.readLine()) != null) {
+                        errorResponse.append(errorLine);
+                    }
+                    Log.e("Web Access:", "Error response: " + errorResponse.toString());
+                }
+            }
+        } catch (Exception e) {
+            Log.e("Web Access:", "Exception: " + e.getMessage(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Exception e) {
+                    Log.e("Web Access:", "Error closing reader", e);
+                }
+            }
+            if (conn != null) {
+                conn.disconnect();
             }
         }
         return response.toString();
@@ -254,7 +302,11 @@ public class WebAccessAdapter {
                 jsonObject.put("id", person.getId());
                 jsonObject.put("firstName", person.getFirstName());
                 jsonObject.put("lastName", person.getLastName());
-                jsonObject.put("photo", person.getPhotoPath());
+
+                // Transform the photo field value
+                String photoPath = person.getPhotoPath().replace("/storage/emulated/0/Pictures/MyAppImages/", "images/");
+                jsonObject.put("photo", photoPath);
+
                 jsonObject.put("address", person.getAddress());
 
                 // Convert the Set of statuses to a JSONArray
@@ -268,36 +320,62 @@ public class WebAccessAdapter {
             }
         }
 
-        // Convert the entire JSON array into a string
-        return jsonArray.toString();
+        // Convert the JSON array into a string
+        return jsonArray.toString().replace("\\/", "/");
     }
 
+    /**
+     * Sends JSON data to a server using a socket connection.
+     * <p>
+     * This method establishes a socket connection to the specified server and
+     * sends an HTTP POST request with the given JSON data. The response from the
+     * server is logged for debugging purposes. It runs on a separate thread to
+     * avoid blocking the main thread.
+     *
+     * @param jsonData The JSON data to send to the server as a string.
+     *                 Must be in valid JSON format.
+     */
     public void sendJsonToServer(String jsonData) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                HttpURLConnection conn = null;
-                OutputStream os = null;
+                Socket socket = null;
+                OutputStream outStream = null;
+                BufferedReader reader = null;
                 try {
                     URL url = new URL(WebAccessAdapter.this.url);
-                    conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("POST");
-                    conn.setRequestProperty("Content-Type", "application/json");
-                    conn.setDoOutput(true); // Set to true to send a request body
+                    String host = url.getHost();
+                    int port = url.getPort() == -1 ? 81 : url.getPort();
+                    String path = url.getPath().isEmpty() ? "/" : url.getPath();
 
-                    // Write the JSON data to the output stream
-                    os = conn.getOutputStream();
-                    os.write(jsonData.getBytes("UTF-8"));
-                    os.flush();
+                    // Open a socket connection
+                    socket = new Socket(host, port);
 
-                    int responseCode = conn.getResponseCode();
-                    Log.d("WebAccess", "Response Code: " + responseCode);
+                    // Send HTTP POST request with JSON data
+                    outStream = socket.getOutputStream();
+                    outStream.write(("POST " + path + " HTTP/1.1\r\n").getBytes());
+                    outStream.write(("HOST: " + host + "\r\n").getBytes());
+                    outStream.write(("Content-Type: application/json\r\n").getBytes());
+                    outStream.write(("Content-Length: " + jsonData.length() + "\r\n").getBytes());
+                    outStream.write(("Connection: close\r\n\r\n" + jsonData).getBytes());
+                    outStream.flush();
+
+                    // Read the server response
+                    reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    String line;
+                    StringBuilder response = new StringBuilder();
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line).append("\n");
+                    }
+
+                    Log.d("WebAccess", "Response Code: " + response);
                 } catch (Exception e) {
                     Log.e("WebAccess", "Error sending data: " + e.getMessage(), e);
                 } finally {
                     try {
-                        if (os != null) os.close();
-                        if (conn != null) conn.disconnect();
+                        if (outStream != null) outStream.close();
+                        if (reader != null) reader.close();
+                        if (socket != null) socket.close();
                     } catch (Exception e) {
                         Log.e("WebAccess", "Error closing resources: " + e.getMessage(), e);
                     }
