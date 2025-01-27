@@ -1,8 +1,12 @@
 package com.example.myapplication.Activities;
 
 import android.app.DatePickerDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -30,6 +35,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class TaskManagementActivity extends AppCompatActivity {
 
@@ -47,6 +53,8 @@ public class TaskManagementActivity extends AppCompatActivity {
     private String selectedDate, selectedTime;
     private Set<String> selectedDays;
     private Context context;
+
+    private Button tempNotifyButton; //Todo connect this to task due logic
 
     private ImageView clientImageView; // Add this to the class
 
@@ -69,6 +77,7 @@ public class TaskManagementActivity extends AppCompatActivity {
         selectedDateTextView = findViewById(R.id.selectedDateTextView);
         selectedTimeTextView = findViewById(R.id.selectedTimeTextView);
         taskListRecyclerView = findViewById(R.id.taskListRecyclerView);
+        tempNotifyButton = findViewById(R.id.btnNotify);
         taskList = new ArrayList<>();
         taskAdapter = new TaskAdapter(taskList);
         taskListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -123,7 +132,54 @@ public class TaskManagementActivity extends AppCompatActivity {
         populateDaysOfWeek();
 
         loadSavedTasks(clientName);
+
+        //Todo connect this to task due logic
+        tempNotifyButton.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Do what you want here
+
+            }
+        });
     }
+
+    private void sendNotification (UUID uID)
+    {
+        Task myTask;
+        for (Task task : taskList)
+        {
+            if (task.getTaskId() == uID)
+            {
+                addNotification();
+            }
+        }
+        //Task was not in task list for some reasons
+    }
+
+    private void addNotification() {
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this)
+                        //.setSmallIcon(R.drawable.messageicon) //set icon for notification
+                        .setContentTitle("Notifications Example") //set title of notification
+                        .setContentText("This is a notification message")//this is notification message
+                        .setAutoCancel(true) // makes auto cancel of notification
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT); //set priority of notification
+
+
+        Intent notificationIntent = new Intent(this, NotificationView.class);
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        //notification message will get at NotificationView
+        notificationIntent.putExtra("message", "This is a notification message");
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+
+        // Add as notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(0, builder.build());
+    }
+
 
     private void openDatePicker() {
         Calendar calendar = Calendar.getInstance();
@@ -184,8 +240,10 @@ public class TaskManagementActivity extends AppCompatActivity {
 
         boolean isRepeating = repeatTaskCheckbox.isChecked();
 
+        UUID uID = UUID.randomUUID();
+
         // Create a new Task object
-        Task newTask = new Task(taskType, selectedDate, selectedTime, isRepeating, selectedDays);
+        Task newTask = new Task(uID, taskType, selectedDate, selectedTime, isRepeating, selectedDays);
 
         // Add the Task object to the task list
         taskList.add(newTask);
@@ -228,23 +286,24 @@ public class TaskManagementActivity extends AppCompatActivity {
             // Split the task string into parts (you may need to adjust this depending on the format)
             String[] parts = taskString.split(" \\| "); // Split by " | " (ensure spacing is correct)
 
-            if (parts.length >= 4) {
-                String taskType = parts[0];
-                String date = parts[1];
-                String time = parts[2];
-                boolean isRepeating = parts[3].startsWith("Repeats on:");
+            if (parts.length >= 5) {
+                UUID uID = UUID.fromString(parts[0]);
+                String taskType = parts[1];
+                String date = parts[2];
+                String time = parts[3];
+                boolean isRepeating = parts[4].startsWith("Repeats on:");
                 Set<String> selectedDays = new HashSet<>();
 
 
-                if (isRepeating && parts.length > 3) {
+                if (isRepeating && parts.length > 4) {
                     // Add selected days from the string (e.g., "Monday, Tuesday")
-                    String daysString = parts[3].replace("Repeats on: ", "");
+                    String daysString = parts[4].replace("Repeats on: ", "");
                     String[] days = daysString.split(", ");
                     selectedDays.addAll(Arrays.asList(days));
                 }
 
                 // Create a Task object and add it to the task list
-                Task task = new Task(taskType, date, time, isRepeating, selectedDays);
+                Task task = new Task(uID, taskType, date, time, isRepeating, selectedDays);
                 taskList.add(task);
             }
         }

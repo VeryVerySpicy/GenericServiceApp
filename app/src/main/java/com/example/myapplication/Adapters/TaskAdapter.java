@@ -55,6 +55,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 ((TaskManagementActivity) holder.itemView.getContext()).deleteTask(task); // Pass the task to be deleted
             }
         });
+
+        holder.taskTypeTextView.setOnClickListener(v -> {
+            task.sendNotification(holder.taskTypeTextView.getContext(), task);
+        });
     }
 
 
