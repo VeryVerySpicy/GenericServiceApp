@@ -49,6 +49,8 @@ public class HomeActivity extends AppCompatActivity {
 
         webAccessAdapter = new WebAccessAdapter(getString(R.string.base_url));
 
+
+
         // Instantiate WebAccess and fetch JSON data
         new Thread(new Runnable() {
             @Override

@@ -2,6 +2,8 @@ package com.example.myapplication.Adapters;
 
 import com.example.myapplication.Activities.TaskManagementActivity;
 import com.example.myapplication.R;
+
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +19,13 @@ import com.example.myapplication.Models.Task;
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
     private List<Task> taskList;
+    private Context context;
 
-    public TaskAdapter(List<Task> taskList) {
+    public TaskAdapter(List<Task> taskList, Context context)
+    {
         this.taskList = taskList;
+        this.context = context;
+
     }
 
     @NonNull
@@ -57,7 +63,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         });
 
         holder.taskTypeTextView.setOnClickListener(v -> {
-            task.sendNotification(holder.taskTypeTextView.getContext(), task);
+            task.sendNotification(this.context);
         });
     }
 

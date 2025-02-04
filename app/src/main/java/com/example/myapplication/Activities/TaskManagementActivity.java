@@ -77,9 +77,8 @@ public class TaskManagementActivity extends AppCompatActivity {
         selectedDateTextView = findViewById(R.id.selectedDateTextView);
         selectedTimeTextView = findViewById(R.id.selectedTimeTextView);
         taskListRecyclerView = findViewById(R.id.taskListRecyclerView);
-        tempNotifyButton = findViewById(R.id.btnNotify);
         taskList = new ArrayList<>();
-        taskAdapter = new TaskAdapter(taskList);
+        taskAdapter = new TaskAdapter(taskList, this);
         taskListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         taskListRecyclerView.setAdapter(taskAdapter);
 
@@ -133,51 +132,6 @@ public class TaskManagementActivity extends AppCompatActivity {
 
         loadSavedTasks(clientName);
 
-        //Todo connect this to task due logic
-        tempNotifyButton.setOnClickListener( new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Do what you want here
-
-            }
-        });
-    }
-
-    private void sendNotification (UUID uID)
-    {
-        Task myTask;
-        for (Task task : taskList)
-        {
-            if (task.getTaskId() == uID)
-            {
-                addNotification();
-            }
-        }
-        //Task was not in task list for some reasons
-    }
-
-    private void addNotification() {
-        NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(this)
-                        //.setSmallIcon(R.drawable.messageicon) //set icon for notification
-                        .setContentTitle("Notifications Example") //set title of notification
-                        .setContentText("This is a notification message")//this is notification message
-                        .setAutoCancel(true) // makes auto cancel of notification
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT); //set priority of notification
-
-
-        Intent notificationIntent = new Intent(this, NotificationView.class);
-        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        //notification message will get at NotificationView
-        notificationIntent.putExtra("message", "This is a notification message");
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        builder.setContentIntent(pendingIntent);
-
-        // Add as notification
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(0, builder.build());
     }
 
 
