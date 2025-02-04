@@ -50,7 +50,11 @@
 
         <activity
             android:name=".Activities.NotificationActivity"
-            android:exported="false" />
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
 
         <!-- Add this for your new activity -->
         <activity

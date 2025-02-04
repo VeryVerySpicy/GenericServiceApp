@@ -72,7 +72,7 @@ public class HomeActivity extends AppCompatActivity {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filterList(searchEditText);  // Pass the EditText as a parameter to the filterList method
+                filterList(searchEditText);  // Pass the EditTedxt as a parameter to the filterList method
             }
         });
 
