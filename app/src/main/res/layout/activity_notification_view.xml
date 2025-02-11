@@ -13,6 +13,7 @@
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
+        android:layout_below="@+id/textView"
         android:layout_width="854dp"
         android:layout_height="480dp"
         />

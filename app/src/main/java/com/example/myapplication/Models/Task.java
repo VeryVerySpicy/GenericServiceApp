@@ -53,7 +53,7 @@ public class Task {
         intent.putExtra("date", getDate());
         intent.putExtra("time", getTime());
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "test")
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "Reminder")
                 .setSmallIcon(R.drawable.cat) //set icon for notification
                 .setContentTitle(getTaskType())
                 .setContentText("Task is due on " + getDate() + " at " + getTime())
@@ -66,7 +66,7 @@ public class Task {
             CharSequence name = "name";
             String description = "Service Task Reminder";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("test", name, importance);
+            NotificationChannel channel = new NotificationChannel("Reminder", name, importance);
             channel.setDescription(description);
             notificationManager.createNotificationChannel(channel);
 

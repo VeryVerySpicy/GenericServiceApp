@@ -67,13 +67,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         });
     }
 
-
-
     @Override
     public int getItemCount() {
         return taskList.size();
     }
-
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
         TextView taskTypeTextView, dateTextView, timeTextView, repeatTextView;
         ImageButton deleteButton;

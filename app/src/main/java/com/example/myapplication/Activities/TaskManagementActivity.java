@@ -1,12 +1,8 @@
 package com.example.myapplication.Activities;
 
 import android.app.DatePickerDialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,7 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -49,13 +44,9 @@ public class TaskManagementActivity extends AppCompatActivity {
     private Button datePickerButton, timePickerButton, saveTaskButton, cancelTaskButton;
     private CheckBox repeatTaskCheckbox;
     private LinearLayout daysOfWeekLayout;
-
     private String selectedDate, selectedTime;
     private Set<String> selectedDays;
     private Context context;
-
-    private Button tempNotifyButton; //Todo connect this to task due logic
-
     private ImageView clientImageView; // Add this to the class
 
     @Override
