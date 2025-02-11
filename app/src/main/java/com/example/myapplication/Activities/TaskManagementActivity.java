@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class TaskManagementActivity extends AppCompatActivity {
 
@@ -43,11 +44,9 @@ public class TaskManagementActivity extends AppCompatActivity {
     private Button datePickerButton, timePickerButton, saveTaskButton, cancelTaskButton;
     private CheckBox repeatTaskCheckbox;
     private LinearLayout daysOfWeekLayout;
-
     private String selectedDate, selectedTime;
     private Set<String> selectedDays;
     private Context context;
-
     private ImageView clientImageView; // Add this to the class
 
     @Override
@@ -70,7 +69,7 @@ public class TaskManagementActivity extends AppCompatActivity {
         selectedTimeTextView = findViewById(R.id.selectedTimeTextView);
         taskListRecyclerView = findViewById(R.id.taskListRecyclerView);
         taskList = new ArrayList<>();
-        taskAdapter = new TaskAdapter(taskList);
+        taskAdapter = new TaskAdapter(taskList, this);
         taskListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         taskListRecyclerView.setAdapter(taskAdapter);
 
@@ -123,7 +122,9 @@ public class TaskManagementActivity extends AppCompatActivity {
         populateDaysOfWeek();
 
         loadSavedTasks(clientName);
+
     }
+
 
     private void openDatePicker() {
         Calendar calendar = Calendar.getInstance();
@@ -184,8 +185,10 @@ public class TaskManagementActivity extends AppCompatActivity {
 
         boolean isRepeating = repeatTaskCheckbox.isChecked();
 
+        UUID uID = UUID.randomUUID();
+
         // Create a new Task object
-        Task newTask = new Task(taskType, selectedDate, selectedTime, isRepeating, selectedDays);
+        Task newTask = new Task(uID, taskType, selectedDate, selectedTime, isRepeating, selectedDays);
 
         // Add the Task object to the task list
         taskList.add(newTask);
@@ -228,23 +231,24 @@ public class TaskManagementActivity extends AppCompatActivity {
             // Split the task string into parts (you may need to adjust this depending on the format)
             String[] parts = taskString.split(" \\| "); // Split by " | " (ensure spacing is correct)
 
-            if (parts.length >= 4) {
-                String taskType = parts[0];
-                String date = parts[1];
-                String time = parts[2];
-                boolean isRepeating = parts[3].startsWith("Repeats on:");
+            if (parts.length >= 5) {
+                UUID uID = UUID.fromString(parts[0]);
+                String taskType = parts[1];
+                String date = parts[2];
+                String time = parts[3];
+                boolean isRepeating = parts[4].startsWith("Repeats on:");
                 Set<String> selectedDays = new HashSet<>();
 
 
-                if (isRepeating && parts.length > 3) {
+                if (isRepeating && parts.length > 4) {
                     // Add selected days from the string (e.g., "Monday, Tuesday")
-                    String daysString = parts[3].replace("Repeats on: ", "");
+                    String daysString = parts[4].replace("Repeats on: ", "");
                     String[] days = daysString.split(", ");
                     selectedDays.addAll(Arrays.asList(days));
                 }
 
                 // Create a Task object and add it to the task list
-                Task task = new Task(taskType, date, time, isRepeating, selectedDays);
+                Task task = new Task(uID, taskType, date, time, isRepeating, selectedDays);
                 taskList.add(task);
             }
         }
