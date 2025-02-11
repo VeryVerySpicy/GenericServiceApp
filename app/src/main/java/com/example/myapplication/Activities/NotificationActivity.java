@@ -3,6 +3,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.MediaItem;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 
@@ -11,6 +12,10 @@ import com.example.myapplication.R;
 public class NotificationActivity extends AppCompatActivity {
     TextView textView;
     PlayerView playerView;
+
+    private static final String VIDEO_URI =
+            "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,5 +30,8 @@ public class NotificationActivity extends AppCompatActivity {
         textView.setText(message);
         ExoPlayer player = new ExoPlayer.Builder(this).build();
         playerView.setPlayer(player);
+        player.setMediaItem(MediaItem.fromUri(VIDEO_URI));
+        player.prepare();
+        player.setPlayWhenReady(true);
     }
 }
