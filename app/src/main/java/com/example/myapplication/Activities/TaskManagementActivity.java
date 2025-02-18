@@ -4,7 +4,9 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -17,6 +19,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -31,6 +35,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.widget.Toast;
 
 public class TaskManagementActivity extends AppCompatActivity {
 
@@ -199,6 +210,9 @@ public class TaskManagementActivity extends AppCompatActivity {
         // Optionally scroll to the newly added task
         taskListRecyclerView.scrollToPosition(taskList.size() - 1);
 
+        // Schedule notification for the newly created task
+        scheduleNotification(newTask);
+
         // Save the task list for the current client to SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("Tasks", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -272,6 +286,115 @@ public class TaskManagementActivity extends AppCompatActivity {
         // Save the updated set back to SharedPreferences
         editor.putStringSet(clientName + "_taskList", taskSet);
         editor.apply();
+
+        // Cancel the scheduled notifications for this task
+        cancelScheduledNotification(taskToDelete);
+
+        // Optionally, show a confirmation message
+        Toast.makeText(this, "Task deleted and notification canceled.", Toast.LENGTH_SHORT).show();
     }
+
+    private void cancelScheduledNotification(Task task) {
+        // Create the Intent that was used to schedule the notification
+        Intent intent = new Intent(this, NotificationReceiver.class);
+        intent.putExtra("taskId", task.getTaskId().toString());
+        intent.putExtra("taskType", task.getTaskType());
+        intent.putExtra("taskDate", task.getDate());
+        intent.putExtra("taskTime", task.getTime());
+
+        // Create the PendingIntent that was used for the notification
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, task.getTaskId().hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        // Get the AlarmManager system service
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        // Cancel the alarm (the one-time or repeating alarm)
+        alarmManager.cancel(pendingIntent);
+    }
+
+    private void scheduleNotification(Task task) {
+        // Create an Intent to trigger the notification
+        Intent intent = new Intent(this, NotificationReceiver.class);
+        intent.putExtra("taskId", task.getTaskId().toString());
+        intent.putExtra("taskType", task.getTaskType());
+        intent.putExtra("taskDate", task.getDate());
+        intent.putExtra("taskTime", task.getTime());
+
+        // Create a PendingIntent to trigger the notification when the alarm goes off
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, task.getTaskId().hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        // Get the AlarmManager system service
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        // Parse the selected date and time to set the exact alarm time
+        String[] dateParts = task.getDate().split("-");
+        String[] timeParts = task.getTime().split(":");
+
+        int year = Integer.parseInt(dateParts[0]);
+        int month = Integer.parseInt(dateParts[1]) - 1; // Month is 0-indexed
+        int dayOfMonth = Integer.parseInt(dateParts[2]);
+
+        int hour = Integer.parseInt(timeParts[0]);
+        int minute = Integer.parseInt(timeParts[1]);
+
+        // If the task does not repeat, set a one-time alarm
+        if (!task.isRepeating() || task.getSelectedDays().isEmpty()) {
+            // Set a one-time alarm for the selected date and time
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(year, month, dayOfMonth, hour, minute, 0);
+            long triggerTime = calendar.getTimeInMillis();
+
+            // Set the exact alarm (one-time)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
+            }
+        } else {
+            // If the task repeats, set alarms for each selected day
+            for (String day : task.getSelectedDays()) {
+                // Get the corresponding Calendar day value for the string (e.g., "Monday" -> 1)
+                int dayOfWeek = getDayOfWeek(day);
+
+                // Set the calendar to the desired time for that day
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(year, month, dayOfMonth, hour, minute, 0);
+
+                // Adjust the calendar to the correct day of the week
+                int currentDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+                int daysUntilNextOccurrence = (dayOfWeek - currentDayOfWeek + 7) % 7;
+                calendar.add(Calendar.DAY_OF_MONTH, daysUntilNextOccurrence);
+
+                long triggerTime = calendar.getTimeInMillis();
+
+                // Set the alarm to repeat on that specific day at the same time
+                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, triggerTime, AlarmManager.INTERVAL_DAY * 7, pendingIntent);
+            }
+        }
+    }
+
+
+    private int getDayOfWeek(String day) {
+        // Return the Calendar constant corresponding to the day of the week
+        switch (day) {
+            case "Monday":
+                return Calendar.MONDAY;
+            case "Tuesday":
+                return Calendar.TUESDAY;
+            case "Wednesday":
+                return Calendar.WEDNESDAY;
+            case "Thursday":
+                return Calendar.THURSDAY;
+            case "Friday":
+                return Calendar.FRIDAY;
+            case "Saturday":
+                return Calendar.SATURDAY;
+            case "Sunday":
+                return Calendar.SUNDAY;
+            default:
+                return -1; // Invalid day
+        }
+    }
+
 
 }

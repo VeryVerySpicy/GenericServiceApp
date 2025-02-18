@@ -46,13 +46,14 @@ public class Task {
         return taskId + " | "  + taskType + " | " + date + " | " + time + " | " + (isRepeating ? "Repeats on: " + String.join(", ", selectedDays) : "No Repeat");
     }
 
-    public void sendNotification(Context context)
-    {
+    public void sendNotification(Context context) {
+        // The notification channel is already created, so no need to create it here
         Intent intent = new Intent(context, NotificationActivity.class);
         intent.putExtra("type", getTaskType());
         intent.putExtra("date", getDate());
         intent.putExtra("time", getTime());
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 10, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "Reminder")
                 .setSmallIcon(R.drawable.cat) //set icon for notification
                 .setContentTitle(getTaskType())
@@ -62,15 +63,7 @@ public class Task {
 
         NotificationManager notificationManager = getSystemService(context, NotificationManager.class);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "name";
-            String description = "Service Task Reminder";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("Reminder", name, importance);
-            channel.setDescription(description);
-            notificationManager.createNotificationChannel(channel);
-
-            notificationManager.notify(10, builder.build());
-        }
+        notificationManager.notify(10, builder.build());
     }
+
 }
