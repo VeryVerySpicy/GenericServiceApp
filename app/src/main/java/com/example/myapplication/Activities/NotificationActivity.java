@@ -14,8 +14,14 @@ public class NotificationActivity extends AppCompatActivity {
     TextView textView;
     PlayerView playerView;
 
-    private static final String VIDEO_URI =
-            "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4";
+    private static final String VIDEO_MED =
+            "https://storage.googleapis.com/bcitdataforclass/Med.mp4";
+    private static final String VIDEO_VITAL =
+            "https://storage.googleapis.com/bcitdataforclass/Vitals.mp4";
+    private static final String VIDEO_HOUSE =
+            "https://storage.googleapis.com/bcitdataforclass/House.mp4";
+    private static final String VIDEO_PERSONAL =
+            "https://storage.googleapis.com/bcitdataforclass/Self.mp4";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +43,23 @@ public class NotificationActivity extends AppCompatActivity {
         // Setup ExoPlayer to play the video
         ExoPlayer player = new ExoPlayer.Builder(this).build();
         playerView.setPlayer(player);
-        player.setMediaItem(MediaItem.fromUri(VIDEO_URI));
+
+        if (type.equalsIgnoreCase("Med Reminders"))
+        {
+            player.setMediaItem(MediaItem.fromUri(VIDEO_MED));
+        }
+        else if (type.equalsIgnoreCase("Vitals Check"))
+        {
+            player.setMediaItem(MediaItem.fromUri(VIDEO_VITAL));
+        }
+        else if (type.equalsIgnoreCase("House Keeping"))
+        {
+            player.setMediaItem(MediaItem.fromUri(VIDEO_HOUSE));
+        }
+        else if (type.equalsIgnoreCase("Personal Care"))
+        {
+            player.setMediaItem(MediaItem.fromUri(VIDEO_PERSONAL));
+        }
         player.prepare();
         player.setPlayWhenReady(true);
     }
